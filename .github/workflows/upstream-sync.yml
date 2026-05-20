@@ -1,0 +1,40 @@
+name: Sync from upstream
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  sync:
+    name: Merge collin80/SavvyCAN master
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout fork master
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: master
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge upstream master
+        run: |
+          git remote add upstream https://github.com/collin80/SavvyCAN.git
+          git fetch upstream master
+          git merge --no-edit upstream/master
+
+      - name: Push to fork
+        run: git push origin master
+
+      - name: Trigger Build workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run build.yml --ref master
+
